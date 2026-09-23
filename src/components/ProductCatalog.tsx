@@ -58,29 +58,30 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
     <div className="space-y-8">
       {/* Search & Filters Controls */}
       <div className="bg-white border border-slate-200 p-4 sm:p-6 rounded-xl shadow-sm space-y-4">
-        <div className="flex flex-col lg:flex-row gap-3 justify-between items-stretch lg:items-center">
+        <div className="flex flex-col lg:flex-row gap-3 justify-between items-stretch">
           
-          {/* Search Box */}
-          <div className="relative flex-1 h-11 flex items-center">
-            <Search className="w-5 h-5 absolute left-3 text-slate-400 pointer-events-none" />
+          {/* Search Box - Matches h-11 Height Exactly */}
+          <div className="relative flex-1 h-11 flex items-center min-w-0">
+            <Search className="w-5 h-5 absolute left-3 text-slate-400 pointer-events-none z-10" />
             <input
               type="text"
               placeholder="Search by perfume name, supplement..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-full pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-rose-800"
+              className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-800 placeholder:text-slate-400"
             />
           </div>
 
-          {/* Sort & Stock Toggles */}
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            {/* Sort Dropdown */}
+          {/* Sort & Stock Controls Group */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto shrink-0">
+            
+            {/* Sort Dropdown - Fixed h-11 */}
             <div className="relative w-full sm:w-48 h-11 flex items-center">
               <ArrowUpDown className="w-4 h-4 absolute left-3 text-slate-400 pointer-events-none z-10" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="w-full h-full pl-9 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-rose-800 cursor-pointer text-slate-700 font-medium"
+                className="w-full h-11 pl-9 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-rose-800 cursor-pointer text-slate-700 font-medium"
               >
                 <option value="default">Sort by: Featured</option>
                 <option value="price-asc">Price: Low to High</option>
@@ -91,7 +92,7 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
               </div>
             </div>
 
-            {/* In Stock Toggle */}
+            {/* In Stock Toggle - Fixed h-11 */}
             <label className="flex items-center justify-center gap-2 px-4 h-11 w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 cursor-pointer select-none hover:bg-slate-100 transition-colors shrink-0">
               <input
                 type="checkbox"
@@ -101,6 +102,7 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
               />
               <span className="whitespace-nowrap">In Stock Only</span>
             </label>
+
           </div>
         </div>
 
