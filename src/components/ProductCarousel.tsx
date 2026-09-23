@@ -1,7 +1,6 @@
-// src/components/ProductCarousel.tsx
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ProductItem } from '@/lib/types';
 import ProductCard from './ProductCard';
 import { SITE_CONFIG } from '@/lib/config';
@@ -27,21 +26,27 @@ export default function ProductCarousel({
 
   const [currentIndex, setCurrentIndex] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(true);
+  const isAnimatingRef = useRef(false);
 
-  // Auto-play timer: restarting every time `currentIndex` updates
+  // Auto-play timer
   useEffect(() => {
     if (products.length <= 1) return;
 
     const timer = setTimeout(() => {
-      setIsTransitioning(true);
-      setCurrentIndex((prev) => prev + 1);
+      if (!isAnimatingRef.current) {
+        isAnimatingRef.current = true;
+        setIsTransitioning(true);
+        setCurrentIndex((prev) => prev + 1);
+      }
     }, 4000);
 
-    return () => clearTimeout(timer); // Clears timer instantly whenever index changes
+    return () => clearTimeout(timer);
   }, [currentIndex, products.length]);
 
-  // Seamless Teleporting at Boundaries
+  // Handle seamless teleporting at boundaries after transition completes
   const handleTransitionEnd = () => {
+    isAnimatingRef.current = false; // Release input lock
+
     if (currentIndex === 0) {
       setIsTransitioning(false);
       setCurrentIndex(products.length);
@@ -51,7 +56,7 @@ export default function ProductCarousel({
     }
   };
 
-  // Re-enable smooth transitions on the next frame after a silent teleport
+  // Re-enable smooth transitions on the frame after a silent teleport
   useEffect(() => {
     if (!isTransitioning) {
       const raf = requestAnimationFrame(() => {
@@ -61,28 +66,30 @@ export default function ProductCarousel({
     }
   }, [isTransitioning]);
 
-  const handlePrev = () => {
+  const handlePrev = useCallback(() => {
+    if (isAnimatingRef.current) return; // Prevent rapid-click boundary drift
+    isAnimatingRef.current = true;
     setIsTransitioning(true);
-    setCurrentIndex((prev) => prev - 1); // Updating state auto-resets the timer useEffect
-  };
+    setCurrentIndex((prev) => prev - 1);
+  }, []);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
+    if (isAnimatingRef.current) return; // Prevent rapid-click boundary drift
+    isAnimatingRef.current = true;
     setIsTransitioning(true);
-    setCurrentIndex((prev) => prev + 1); // Updating state auto-resets the timer useEffect
-  };
+    setCurrentIndex((prev) => prev + 1);
+  }, []);
 
   const handleDotClick = (realIndex: number) => {
+    if (isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
     setIsTransitioning(true);
     setCurrentIndex(realIndex + 1);
   };
 
-  // Active dot mapping
+  // Active dot mapping safely clamped within real bounds
   const activeDotIndex =
-    currentIndex === 0
-      ? products.length - 1
-      : currentIndex === extendedProducts.length - 1
-      ? 0
-      : currentIndex - 1;
+    (currentIndex - 1 + products.length) % products.length;
 
   return (
     <div className="w-full space-y-4 pt-6">
@@ -96,14 +103,14 @@ export default function ProductCarousel({
           <button
             onClick={handlePrev}
             aria-label="Previous product"
-            className="p-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm cursor-pointer"
+            className="p-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={handleNext}
             aria-label="Next product"
-            className="p-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm cursor-pointer"
+            className="p-2 rounded-full border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
