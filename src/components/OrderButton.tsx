@@ -9,7 +9,7 @@ interface OrderButtonProps {
 export default function OrderButton({ projectTitle, priceTZS, whatsappNumber }: OrderButtonProps) {
   const handleOrder = () => {
     const text = encodeURIComponent(
-      `Hujambo! I am interested in purchasing the project: "${projectTitle}" (TZS ${priceTZS.toLocaleString()}). Please let me know how to proceed with payment.`
+      `Hujambo! I am interested in purchasing the product: "${projectTitle}" (TZS ${priceTZS.toLocaleString()}). Please let me know how to proceed with payment.`
     );
     window.open(`https://wa.me/${whatsappNumber}?text=${text}`, '_blank');
   };

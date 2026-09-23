@@ -1,5 +1,5 @@
 export const SITE_CONFIG = {
-  name: "Mariam's Market",
+  name: "Mariamz Market",
   whatsappNumber: '+447909846560', 
   tagline: 'Luxury Perfumes, Skincare & Wellness Supplements in Tanzania',
   currency: 'TZS',
