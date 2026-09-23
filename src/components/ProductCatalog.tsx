@@ -1,21 +1,24 @@
 // src/components/ProductCatalog.tsx
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ProductItem } from '../lib/types';
 import ProductCard from './ProductCard';
-import { Search, Filter, ArrowUpDown, Package } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ProductCatalogProps {
   initialProducts: ProductItem[];
   whatsappNumber: string;
 }
 
+const ITEMS_PER_PAGE = 12; // 4 full rows on desktop (3 cols), 6 on tablet (2 cols)
+
 export default function ProductCatalog({ initialProducts, whatsappNumber }: ProductCatalogProps) {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   const categories: string[] = useMemo(() => {
     if (!initialProducts || !Array.isArray(initialProducts)) return ['All'];
@@ -27,6 +30,11 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
     });
     return ['All', ...Array.from(cats)];
   }, [initialProducts]);
+
+  // Reset to page 1 whenever search, category, stock, or sort changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory, sortBy, inStockOnly]);
 
   const filteredProducts = useMemo(() => {
     if (!initialProducts) return [];
@@ -54,13 +62,25 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
       });
   }, [initialProducts, searchTerm, selectedCategory, sortBy, inStockOnly]);
 
+  // Calculate pagination slice
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="space-y-8">
       {/* Search & Filters Controls */}
       <div className="bg-white border border-slate-200 p-4 sm:p-6 rounded-xl shadow-sm space-y-4">
         <div className="flex flex-col lg:flex-row gap-3 justify-between items-stretch">
           
-          {/* Search Box - Matches h-11 Height Exactly */}
+          {/* Search Box */}
           <div className="relative flex-1 h-11 flex items-center min-w-0">
             <Search className="w-5 h-5 absolute left-3 text-slate-400 pointer-events-none z-10" />
             <input
@@ -72,10 +92,8 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
             />
           </div>
 
-          {/* Sort & Stock Controls Group */}
+          {/* Sort & Stock Controls */}
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto shrink-0">
-            
-            {/* Sort Dropdown - Fixed h-11 */}
             <div className="relative w-full sm:w-48 h-11 flex items-center">
               <ArrowUpDown className="w-4 h-4 absolute left-3 text-slate-400 pointer-events-none z-10" />
               <select
@@ -92,7 +110,6 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
               </div>
             </div>
 
-            {/* In Stock Toggle - Fixed h-11 */}
             <label className="flex items-center justify-center gap-2 px-4 h-11 w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 cursor-pointer select-none hover:bg-slate-100 transition-colors shrink-0">
               <input
                 type="checkbox"
@@ -102,7 +119,6 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
               />
               <span className="whitespace-nowrap">In Stock Only</span>
             </label>
-
           </div>
         </div>
 
@@ -127,20 +143,65 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
       </div>
 
       {/* Grid Display */}
-      {filteredProducts.length === 0 ? (
+      {paginatedProducts.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-xl p-12 text-center space-y-3">
           <Package className="w-10 h-10 text-slate-300 mx-auto" />
           <p className="text-slate-700 font-semibold">No products match your current filters.</p>
         </div>
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product, index) => (
+          {paginatedProducts.map((product, index) => (
             <ProductCard
               key={product.id || `${product.name}-${index}`}
               product={product}
               whatsappNumber={whatsappNumber}
             />
           ))}
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+          <span className="text-xs font-medium text-slate-500">
+            Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1} to{' '}
+            {Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)} of{' '}
+            {filteredProducts.length} products
+          </span>
+
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              aria-label="Previous page"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={`w-9 h-9 text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
+                  currentPage === page
+                    ? 'bg-rose-900 text-white'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
+              aria-label="Next page"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       )}
     </div>
