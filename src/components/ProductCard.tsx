@@ -1,8 +1,11 @@
+// src/components/ProductCard.tsx
 'use client';
 
+import { useState } from 'react';
 import { ProductItem } from '../lib/types';
 import OrderButton from './OrderButton';
 import { Package } from 'lucide-react';
+import { formatImageUrl } from '@/lib/utils'; // <--- Import helper
 
 interface ProductCardProps {
   product: ProductItem;
@@ -10,15 +13,22 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, whatsappNumber }: ProductCardProps) {
+  const [imgError, setImgError] = useState(false);
+  
+  // Format Google Drive links or direct image URLs safely
+  const formattedImgUrl = formatImageUrl(product.imageUrl);
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
       <div>
         {/* Image Header */}
         <div className="relative w-full h-52 bg-slate-100 flex items-center justify-center">
-          {product.imageUrl ? (
+          {formattedImgUrl && !imgError ? (
             <img
-              src={product.imageUrl}
+              src={formattedImgUrl}
               alt={product.name}
+              referrerPolicy="no-referrer"
+              onError={() => setImgError(true)}
               className="w-full h-full object-cover"
             />
           ) : (

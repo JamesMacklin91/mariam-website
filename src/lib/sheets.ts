@@ -29,7 +29,12 @@ export async function fetchProductsFromSheet(): Promise<ProductItem[]> {
               category: row.category || 'Wellness',
               priceTZS: parseFloat((row.price || '0').replace(/,/g, '')),
               inStock: qty > 0,
-              imageUrl: row.image_url?.trim() || undefined, // <--- Map image_url column
+              imageUrl: 
+                row.image_url?.trim() || 
+                row.imageUrl?.trim() || 
+                row.Image?.trim() || 
+                row['Image URL']?.trim() || 
+                undefined,              
               highlights: [
                 `In Stock: ${qty} available`,
                 '100% Authentic Import',
