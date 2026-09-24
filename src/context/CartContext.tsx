@@ -56,31 +56,39 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addToCart = (product: ProductItem) => {
-    if (!product.inStock) return;
+  const maxStock = getMaxStock(product);
+  if (maxStock <= 0) return;
 
-    const maxStock = getMaxStock(product);
+  setCart((prevCart) => {
+    const targetId = product.id || product.name;
+    const existingIndex = prevCart.findIndex(
+      (item) => (item.product.id || item.product.name) === targetId
+    );
 
-    setCart((prevCart) => {
-      const existingIndex = prevCart.findIndex(
-        (item) => (item.product.id || item.product.name) === (product.id || product.name)
-      );
+    if (existingIndex > -1) {
+      const currentQty = prevCart[existingIndex].quantity;
+      
+      // If already at or above max stock, return existing state unchanged
+      if (currentQty >= maxStock) return prevCart;
 
-      if (existingIndex > -1) {
-        const currentQty = prevCart[existingIndex].quantity;
-        // Don't add if already at max stock limit
-        if (currentQty >= maxStock) return prevCart;
+      // Create a clean new array and increment quantity by EXACTLY 1
+      return prevCart.map((item, idx) => {
+        if (idx === existingIndex) {
+          return {
+            ...item,
+            quantity: Math.min(item.quantity + 1, maxStock),
+          };
+        }
+        return item;
+      });
+    }
 
-        const updated = [...prevCart];
-        updated[existingIndex].quantity = Math.min(currentQty + 1, maxStock);
-        return updated;
-      }
+    // New item being added for the first time
+    return [...prevCart, { product, quantity: 1 }];
+  });
 
-      return [...prevCart, { product, quantity: 1 }];
-    });
-
-    setIsCartOpen(true);
-  };
-
+  setIsCartOpen(true);
+};
   const removeFromCart = (productId: string) => {
     setCart((prev) => prev.filter((item) => (item.product.id || item.product.name) !== productId));
   };
