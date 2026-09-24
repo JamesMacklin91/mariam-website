@@ -4,8 +4,9 @@
 import { useState } from 'react';
 import { ProductItem } from '../lib/types';
 import OrderButton from './OrderButton';
-import { Package } from 'lucide-react';
-import { formatImageUrl } from '@/lib/utils'; // <--- Import helper
+import { Package, ShoppingBag } from 'lucide-react';
+import { formatImageUrl } from '@/lib/utils';
+import { useCart } from '@/context/CartContext'; // <--- Import
 
 interface ProductCardProps {
   product: ProductItem;
@@ -14,8 +15,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product, whatsappNumber }: ProductCardProps) {
   const [imgError, setImgError] = useState(false);
-  
-  // Format Google Drive links or direct image URLs safely
+  const { addToCart } = useCart(); // <--- Hook into cart context
   const formattedImgUrl = formatImageUrl(product.imageUrl);
 
   return (
@@ -60,16 +60,33 @@ export default function ProductCard({ product, whatsappNumber }: ProductCardProp
         </div>
       </div>
 
-      {/* Pricing & CTA */}
-      <div className="p-5 pt-0 mt-2 border-t border-slate-100 flex items-center justify-between gap-4">
-        <div>
-          <span className="text-[10px] text-slate-400 uppercase font-bold block">Price</span>
-          <span className="text-base font-bold text-slate-900">
-            TZS {product.priceTZS.toLocaleString()}
-          </span>
+      {/* Pricing & CTAs */}
+      <div className="p-5 pt-0 mt-2 border-t border-slate-100 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[10px] text-slate-400 uppercase font-bold block">Price</span>
+            <span className="text-base font-bold text-slate-900">
+              TZS {product.priceTZS.toLocaleString()}
+            </span>
+          </div>
         </div>
-        <div className="w-1/2">
-          <OrderButton projectTitle={product.name} priceTZS={product.priceTZS} whatsappNumber={whatsappNumber} />
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => addToCart(product)}
+            disabled={!product.inStock}
+            type="button"
+            className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-800 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+          >
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Add to Bag</span>
+          </button>
+
+          <OrderButton
+            projectTitle={product.name}
+            priceTZS={product.priceTZS}
+            whatsappNumber={whatsappNumber}
+          />
         </div>
       </div>
     </div>

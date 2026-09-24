@@ -5,6 +5,7 @@ export interface ProductItem {
   category: 'Perfumes' | 'Supplements' | 'Skincare' | 'Wellness';
   priceTZS: number;
   inStock: boolean;
+  stock?: number;
   imageUrl?:string;
   highlights: string[];
 }

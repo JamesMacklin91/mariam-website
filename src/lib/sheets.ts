@@ -29,6 +29,7 @@ export async function fetchProductsFromSheet(): Promise<ProductItem[]> {
               category: row.category || 'Wellness',
               priceTZS: parseFloat((row.price || '0').replace(/,/g, '')),
               inStock: qty > 0,
+              stock: qty,
               imageUrl: 
                 row.image_url?.trim() || 
                 row.imageUrl?.trim() || 
