@@ -4,7 +4,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { ProductItem } from '../lib/types';
 import ProductCard from './ProductCard';
-import { Search, Filter, ArrowUpDown, Package, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, Package, ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 interface ProductCatalogProps {
   initialProducts: ProductItem[];
@@ -15,25 +15,38 @@ const ITEMS_PER_PAGE = 12;
 
 export default function ProductCatalog({ initialProducts, whatsappNumber }: ProductCatalogProps) {
   const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc'>('default');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'default' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc'>('default');
   const [inStockOnly, setInStockOnly] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState<number>(1);
 
   const categories: string[] = useMemo(() => {
-    if (!initialProducts || !Array.isArray(initialProducts)) return ['All'];
+    if (!initialProducts || !Array.isArray(initialProducts)) return [];
     const cats = new Set<string>();
     initialProducts.forEach((p) => {
       if (p.category && typeof p.category === 'string' && p.category.trim()) {
         cats.add(p.category.trim());
       }
     });
-    return ['All', ...Array.from(cats)];
+    return Array.from(cats);
   }, [initialProducts]);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, selectedCategory, sortBy, inStockOnly]);
+  }, [searchTerm, selectedCategories, sortBy, inStockOnly]);
+
+  const toggleCategory = (category: string) => {
+    if (category === 'All') {
+      setSelectedCategories([]);
+      return;
+    }
+
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
+    );
+  };
 
   const filteredProducts = useMemo(() => {
     if (!initialProducts) return [];
@@ -47,8 +60,10 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
           product.name?.toLowerCase().includes(query) ||
           product.description?.toLowerCase().includes(query);
 
+        // Multi-category match: show product if no category selected OR product category is in selected array
         const matchesCategory =
-          selectedCategory === 'All' || product.category === selectedCategory;
+          selectedCategories.length === 0 ||
+          (product.category && selectedCategories.includes(product.category));
 
         const matchesStock = !inStockOnly || Boolean(product.inStock);
 
@@ -57,9 +72,11 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
       .sort((a, b) => {
         if (sortBy === 'price-asc') return (a.priceTZS || 0) - (b.priceTZS || 0);
         if (sortBy === 'price-desc') return (b.priceTZS || 0) - (a.priceTZS || 0);
+        if (sortBy === 'name-asc') return (a.name || '').localeCompare(b.name || '');
+        if (sortBy === 'name-desc') return (b.name || '').localeCompare(a.name || '');
         return 0;
       });
-  }, [initialProducts, searchTerm, selectedCategory, sortBy, inStockOnly]);
+  }, [initialProducts, searchTerm, selectedCategories, sortBy, inStockOnly]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = useMemo(() => {
@@ -77,6 +94,7 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
       {/* Search & Filters Controls */}
       <div className="bg-white border border-slate-200 p-4 sm:p-6 rounded-xl shadow-xs space-y-4">
         <div className="flex flex-col lg:flex-row gap-3 justify-between items-stretch">
+          {/* Search Input */}
           <div className="relative flex-1 h-11 flex items-center min-w-0">
             <Search className="w-5 h-5 absolute left-3 text-slate-400 pointer-events-none z-10" />
             <input
@@ -89,7 +107,8 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto shrink-0">
-            <div className="relative w-full sm:w-48 h-11 flex items-center">
+            {/* Sort Dropdown */}
+            <div className="relative w-full sm:w-52 h-11 flex items-center">
               <ArrowUpDown className="w-4 h-4 absolute left-3 text-slate-400 pointer-events-none z-10" />
               <select
                 value={sortBy}
@@ -97,6 +116,8 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
                 className="w-full h-11 pl-9 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm appearance-none focus:outline-hidden focus:ring-2 focus:ring-rose-800 cursor-pointer text-slate-700 font-medium"
               >
                 <option value="default">Sort by: Featured</option>
+                <option value="name-asc">Name: A to Z</option>
+                <option value="name-desc">Name: Z to A</option>
                 <option value="price-asc">Price: Low to High</option>
                 <option value="price-desc">Price: High to Low</option>
               </select>
@@ -105,6 +126,7 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
               </div>
             </div>
 
+            {/* In Stock Only Checkbox */}
             <label className="flex items-center justify-center gap-2 px-4 h-11 w-full sm:w-auto bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium text-slate-700 cursor-pointer select-none hover:bg-slate-100 transition-colors shrink-0">
               <input
                 type="checkbox"
@@ -117,22 +139,42 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
           </div>
         </div>
 
+        {/* Multi-Select Category Filters */}
         <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-1 scrollbar-none">
           <Filter className="w-4 h-4 text-slate-400 shrink-0 mr-1" />
-          {categories.map((cat: string) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
-                selectedCategory === cat
-                  ? 'bg-rose-900 text-white'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+          
+          {/* All Button */}
+          <button
+            type="button"
+            onClick={() => toggleCategory('All')}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1 ${
+              selectedCategories.length === 0
+                ? 'bg-rose-900 text-white'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            <span>All Categories</span>
+          </button>
+
+          {/* Individual Category Pills */}
+          {categories.map((cat: string) => {
+            const isSelected = selectedCategories.includes(cat);
+            return (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => toggleCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer flex items-center gap-1.5 ${
+                  isSelected
+                    ? 'bg-rose-900 text-white'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                }`}
+              >
+                {isSelected && <Check className="w-3 h-3" />}
+                <span>{cat}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
