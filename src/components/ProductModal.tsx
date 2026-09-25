@@ -104,14 +104,22 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
               </div>
             )}
 
-            <div className="absolute top-4 left-4">
+            {/* Category Badge (Matched to ProductCard) */}
+            {product.category && (
+              <span className="absolute top-2 left-2 bg-slate-900/75 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-xs">
+                {product.category}
+              </span>
+            )}
+
+            {/* Stock Badge */}
+            <div className="absolute bottom-4 left-4">
               {product.inStock ? (
-                <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200">
+                <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200 shadow-2xs">
                   <CheckCircle className="w-3.5 h-3.5" />
                   In Stock ({maxStock})
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-1 rounded-full border border-rose-200">
+                <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-1 rounded-full border border-rose-200 shadow-2xs">
                   Out of Stock
                 </span>
               )}
@@ -121,12 +129,6 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
           {/* Details & Actions */}
           <div className="p-6 flex flex-col justify-between space-y-6">
             <div className="space-y-3">
-              {product.category && (
-                <span className="text-[11px] font-bold tracking-wider text-rose-900 uppercase bg-rose-50 px-2 py-1 rounded">
-                  {product.category}
-                </span>
-              )}
-
               <h2 className="text-xl font-bold text-slate-900 leading-snug">
                 {product.name}
               </h2>
@@ -174,12 +176,12 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
                     </div>
                   </div>
 
-                  {/* Stacked Full-Width Buttons */}
+                  {/* Stacked Action Buttons */}
                   <div className="space-y-2">
                     <button
                       onClick={handleAddMultiple}
                       type="button"
-                      className="w-full py-2.5 px-3 bg-rose-900 hover:bg-rose-950 text-white font-bold rounded-lg text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-2.5 px-3 bg-rose-900 hover:bg-rose-950 text-white font-bold rounded-lg text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                     >
                       <ShoppingBag className="w-3.5 h-3.5" />
                       <span>Add to Bag</span>
@@ -188,7 +190,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
                     <button
                       onClick={handleDirectWhatsApp}
                       type="button"
-                      className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
                       <span>Order via WhatsApp</span>
