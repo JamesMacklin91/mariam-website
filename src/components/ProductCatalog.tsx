@@ -11,7 +11,7 @@ interface ProductCatalogProps {
   whatsappNumber: string;
 }
 
-const ITEMS_PER_PAGE = 12; // 4 full rows on desktop (3 cols), 6 on tablet (2 cols)
+const ITEMS_PER_PAGE = 12;
 
 export default function ProductCatalog({ initialProducts, whatsappNumber }: ProductCatalogProps) {
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -31,7 +31,6 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
     return ['All', ...Array.from(cats)];
   }, [initialProducts]);
 
-  // Reset to page 1 whenever search, category, stock, or sort changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, selectedCategory, sortBy, inStockOnly]);
@@ -62,7 +61,6 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
       });
   }, [initialProducts, searchTerm, selectedCategory, sortBy, inStockOnly]);
 
-  // Calculate pagination slice
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -77,10 +75,8 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
   return (
     <div className="space-y-8">
       {/* Search & Filters Controls */}
-      <div className="bg-white border border-slate-200 p-4 sm:p-6 rounded-xl shadow-sm space-y-4">
+      <div className="bg-white border border-slate-200 p-4 sm:p-6 rounded-xl shadow-xs space-y-4">
         <div className="flex flex-col lg:flex-row gap-3 justify-between items-stretch">
-          
-          {/* Search Box */}
           <div className="relative flex-1 h-11 flex items-center min-w-0">
             <Search className="w-5 h-5 absolute left-3 text-slate-400 pointer-events-none z-10" />
             <input
@@ -88,18 +84,17 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
               placeholder="Search by perfume name, supplement..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-rose-800 placeholder:text-slate-400"
+              className="w-full h-11 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-rose-800 placeholder:text-slate-400"
             />
           </div>
 
-          {/* Sort & Stock Controls */}
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto shrink-0">
             <div className="relative w-full sm:w-48 h-11 flex items-center">
               <ArrowUpDown className="w-4 h-4 absolute left-3 text-slate-400 pointer-events-none z-10" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="w-full h-11 pl-9 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-rose-800 cursor-pointer text-slate-700 font-medium"
+                className="w-full h-11 pl-9 pr-8 bg-slate-50 border border-slate-200 rounded-lg text-sm appearance-none focus:outline-hidden focus:ring-2 focus:ring-rose-800 cursor-pointer text-slate-700 font-medium"
               >
                 <option value="default">Sort by: Featured</option>
                 <option value="price-asc">Price: Low to High</option>
@@ -122,7 +117,6 @@ export default function ProductCatalog({ initialProducts, whatsappNumber }: Prod
           </div>
         </div>
 
-        {/* Category Filter Pills */}
         <div className="flex items-center gap-2 overflow-x-auto pt-2 pb-1 scrollbar-none">
           <Filter className="w-4 h-4 text-slate-400 shrink-0 mr-1" />
           {categories.map((cat: string) => (

@@ -26,7 +26,6 @@ export default async function ProductsPage() {
         </p>
       </section>
 
-      {/* Uses centralized config number */}
       <ProductCatalog initialProducts={products} whatsappNumber={SITE_CONFIG.whatsappNumber} />
     </div>
   );

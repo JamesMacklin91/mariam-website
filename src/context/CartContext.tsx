@@ -2,129 +2,107 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { ProductItem } from '@/lib/types';
 
-export interface CartItem {
-  product: ProductItem;
+export interface CartRecord {
+  id: string;
   quantity: number;
 }
 
 interface CartContextType {
-  cart: CartItem[];
-  addToCart: (product: ProductItem) => void;
+  cartRecords: CartRecord[];
+  addToCart: (productId: string, maxStock?: number) => void;
   removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, delta: number) => void;
+  updateQuantity: (productId: string, delta: number, maxStock?: number) => void;
   clearCart: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
   totalCount: number;
-  totalPriceTZS: number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [cartRecords, setCartRecords] = useState<CartRecord[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
 
+  // Load raw ID/Qty array on mount
   useEffect(() => {
     try {
-      const savedCart = localStorage.getItem('mariam_cart');
-      if (savedCart) {
-        setCart(JSON.parse(savedCart));
+      const saved = localStorage.getItem('mariam_cart_v2');
+      if (saved) {
+        setCartRecords(JSON.parse(saved));
       }
     } catch (e) {
       console.error('Failed to parse cart from localStorage:', e);
+    } finally {
+      setIsHydrated(true);
     }
   }, []);
 
+  // Save raw ID/Qty array when updated
   useEffect(() => {
+    if (!isHydrated) return;
     try {
-      localStorage.setItem('mariam_cart', JSON.stringify(cart));
+      localStorage.setItem('mariam_cart_v2', JSON.stringify(cartRecords));
     } catch (e) {
       console.error('Failed to save cart to localStorage:', e);
     }
-  }, [cart]);
+  }, [cartRecords, isHydrated]);
 
-  // Helper to determine maximum allowable quantity for a product
-  const getMaxStock = (product: ProductItem): number => {
-    if (typeof product.stock === 'number' && product.stock > 0) {
-      return product.stock;
-    }
-    // If no stock count is provided, but inStock is true, cap at 10 (or 1 if preferred)
-    return product.inStock ? 10 : 0;
+  const addToCart = (productId: string, maxStock = 10) => {
+    if (maxStock <= 0) return;
+
+    setCartRecords((prev) => {
+      const existingIndex = prev.findIndex((item) => item.id === productId);
+
+      if (existingIndex > -1) {
+        const currentQty = prev[existingIndex].quantity;
+        if (currentQty >= maxStock) return prev;
+
+        return prev.map((item, idx) => {
+          if (idx === existingIndex) {
+            return { id: item.id, quantity: Math.min(item.quantity + 1, maxStock) };
+          }
+          return item;
+        });
+      }
+
+      return [...prev, { id: productId, quantity: 1 }];
+    });
+
+    setIsCartOpen(true);
   };
 
-  const addToCart = (product: ProductItem) => {
-  const maxStock = getMaxStock(product);
-  if (maxStock <= 0) return;
-
-  setCart((prevCart) => {
-    const targetId = product.id || product.name;
-    const existingIndex = prevCart.findIndex(
-      (item) => (item.product.id || item.product.name) === targetId
-    );
-
-    if (existingIndex > -1) {
-      const currentQty = prevCart[existingIndex].quantity;
-      
-      // If already at or above max stock, return existing state unchanged
-      if (currentQty >= maxStock) return prevCart;
-
-      // Create a clean new array and increment quantity by EXACTLY 1
-      return prevCart.map((item, idx) => {
-        if (idx === existingIndex) {
-          return {
-            ...item,
-            quantity: Math.min(item.quantity + 1, maxStock),
-          };
-        }
-        return item;
-      });
-    }
-
-    // New item being added for the first time
-    return [...prevCart, { product, quantity: 1 }];
-  });
-
-  setIsCartOpen(true);
-};
   const removeFromCart = (productId: string) => {
-    setCart((prev) => prev.filter((item) => (item.product.id || item.product.name) !== productId));
+    setCartRecords((prev) => prev.filter((item) => item.id !== productId));
   };
 
-  const updateQuantity = (productId: string, delta: number) => {
-    setCart((prev) =>
+  const updateQuantity = (productId: string, delta: number, maxStock = 10) => {
+    setCartRecords((prev) =>
       prev
         .map((item) => {
-          const id = item.product.id || item.product.name;
-          if (id === productId) {
-            const maxStock = getMaxStock(item.product);
+          if (item.id === productId) {
             const newQty = item.quantity + delta;
-
             if (newQty <= 0) return null;
-            return { ...item, quantity: Math.min(newQty, maxStock) };
+            return { id: item.id, quantity: Math.min(newQty, maxStock) };
           }
           return item;
         })
-        .filter((item): item is CartItem => item !== null)
+        .filter((item): item is CartRecord => item !== null)
     );
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => setCartRecords([]);
 
   const totalCount = useMemo(() => {
-    return cart.reduce((sum, item) => sum + item.quantity, 0);
-  }, [cart]);
-
-  const totalPriceTZS = useMemo(() => {
-    return cart.reduce((sum, item) => sum + (item.product.priceTZS || 0) * item.quantity, 0);
-  }, [cart]);
+    return cartRecords.reduce((sum, item) => sum + item.quantity, 0);
+  }, [cartRecords]);
 
   return (
     <CartContext.Provider
       value={{
-        cart,
+        cartRecords,
         addToCart,
         removeFromCart,
         updateQuantity,
@@ -132,7 +110,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         isCartOpen,
         setIsCartOpen,
         totalCount,
-        totalPriceTZS,
       }}
     >
       {children}
