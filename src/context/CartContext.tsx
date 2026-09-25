@@ -1,7 +1,7 @@
 // src/context/CartContext.tsx
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 export interface CartRecord {
   id: string;
@@ -13,6 +13,7 @@ interface CartContextType {
   addToCart: (productId: string, maxStock?: number) => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, delta: number, maxStock?: number) => void;
+  clampRecordQuantity: (productId: string, maxStock: number) => void;
   clearCart: () => void;
   isCartOpen: boolean;
   setIsCartOpen: (open: boolean) => void;
@@ -26,7 +27,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isHydrated, setIsHydrated] = useState(false);
 
-  // Load raw ID/Qty array on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem('mariam_cart_v2');
@@ -40,7 +40,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Save raw ID/Qty array when updated
   useEffect(() => {
     if (!isHydrated) return;
     try {
@@ -93,6 +92,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  // Clamps stored state down to match live stock changes from Google Sheets
+  const clampRecordQuantity = useCallback((productId: string, maxStock: number) => {
+    setCartRecords((prev) =>
+      prev
+        .map((item) => {
+          if (item.id === productId) {
+            if (maxStock <= 0) return null;
+            if (item.quantity > maxStock) {
+              return { id: item.id, quantity: maxStock };
+            }
+          }
+          return item;
+        })
+        .filter((item): item is CartRecord => item !== null)
+    );
+  }, []);
+
   const clearCart = () => setCartRecords([]);
 
   const totalCount = useMemo(() => {
@@ -106,6 +122,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         addToCart,
         removeFromCart,
         updateQuantity,
+        clampRecordQuantity,
         clearCart,
         isCartOpen,
         setIsCartOpen,

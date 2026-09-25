@@ -13,10 +13,19 @@ export default function CartDrawer({
 }: {
   whatsappNumber?: string;
 }) {
-  const { cartRecords, isCartOpen, setIsCartOpen, updateQuantity, removeFromCart, clearCart, totalCount } = useCart();
+  const {
+    cartRecords,
+    isCartOpen,
+    setIsCartOpen,
+    updateQuantity,
+    removeFromCart,
+    clampRecordQuantity,
+    clearCart,
+    totalCount,
+  } = useCart();
   const { getProductById } = useProducts();
 
-  // Disable body scroll when drawer is open
+  // Lock background scrolling when drawer is open
   useEffect(() => {
     if (isCartOpen) {
       document.body.style.overflow = 'hidden';
@@ -29,6 +38,26 @@ export default function CartDrawer({
     };
   }, [isCartOpen]);
 
+  // Auto-sync stored quantities with live sheet stock whenever drawer is rendered or records change
+  useEffect(() => {
+    if (!cartRecords.length) return;
+
+    cartRecords.forEach((record) => {
+      const product = getProductById(record.id);
+      if (!product || !product.inStock) {
+        clampRecordQuantity(record.id, 0); // Remove out-of-stock or deleted items
+      } else {
+        const maxStock =
+          typeof product.stock === 'number' && product.stock > 0
+            ? product.stock
+            : 10;
+        if (record.quantity > maxStock) {
+          clampRecordQuantity(record.id, maxStock); // Clamp stored state & update badge
+        }
+      }
+    });
+  }, [cartRecords, getProductById, clampRecordQuantity]);
+
   if (!isCartOpen) return null;
 
   // Resolve stored IDs against live ProductContext
@@ -37,12 +66,27 @@ export default function CartDrawer({
       const product = getProductById(record.id);
       if (!product || !product.inStock) return null;
 
+      const maxStock =
+        typeof product.stock === 'number' && product.stock > 0
+          ? product.stock
+          : 10;
+      const validQty = Math.min(record.quantity, maxStock);
+
       return {
         product,
-        quantity: record.quantity,
+        quantity: validQty,
+        maxStock,
       };
     })
-    .filter((item): item is { product: NonNullable<ReturnType<typeof getProductById>>; quantity: number } => item !== null);
+    .filter(
+      (
+        item
+      ): item is {
+        product: NonNullable<ReturnType<typeof getProductById>>;
+        quantity: number;
+        maxStock: number;
+      } => item !== null
+    );
 
   const totalPriceTZS = resolvedItems.reduce(
     (sum, item) => sum + (item.product.priceTZS || 0) * item.quantity,
@@ -80,7 +124,6 @@ export default function CartDrawer({
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
         <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between">
-          
           {/* Header */}
           <div className="p-4 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-slate-50">
             <div className="flex items-center gap-2">
@@ -105,13 +148,14 @@ export default function CartDrawer({
               <div className="text-center py-16 space-y-3">
                 <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto" />
                 <p className="text-slate-700 font-semibold text-base">Your bag is empty</p>
-                <p className="text-slate-500 text-xs">Add items from the catalog to build your order.</p>
+                <p className="text-slate-500 text-xs">
+                  Add items from the catalog to build your order.
+                </p>
               </div>
             ) : (
-              resolvedItems.map(({ product, quantity }) => {
+              resolvedItems.map(({ product, quantity, maxStock }) => {
                 const itemId = product.id || product.name;
                 const formattedImg = formatImageUrl(product.imageUrl);
-                const maxStock = typeof product.stock === 'number' && product.stock > 0 ? product.stock : 10;
                 const isAtMax = quantity >= maxStock;
 
                 return (
@@ -163,7 +207,7 @@ export default function CartDrawer({
                         >
                           <Minus className="w-3 h-3" />
                         </button>
-                        
+
                         <span className="text-xs font-bold text-slate-800 w-4 text-center">
                           {quantity}
                         </span>
@@ -178,7 +222,7 @@ export default function CartDrawer({
                           <Plus className="w-3 h-3" />
                         </button>
 
-                        {/* Restored Max Stock Badge */}
+                        {/* Max Stock Badge */}
                         {isAtMax && (
                           <span className="text-[10px] text-amber-700 font-bold bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
                             Max stock ({maxStock})
@@ -192,7 +236,7 @@ export default function CartDrawer({
             )}
           </div>
 
-          {/* Footer */}
+          {/* Footer & WhatsApp Checkout CTA */}
           {resolvedItems.length > 0 && (
             <div className="p-4 sm:p-6 border-t border-slate-200 bg-slate-50 space-y-4">
               <div className="flex justify-between items-center text-sm font-bold text-slate-900">
