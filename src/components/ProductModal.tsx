@@ -68,7 +68,6 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
     window.open(`https://wa.me/${cleanNumber}?text=${encodedMessage}`, '_blank');
   };
 
-  // createPortal renders directly to <body>, breaking out of parent carousel overflow/z-index constraints
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
       {/* Backdrop */}
@@ -175,11 +174,12 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* Stacked Full-Width Buttons */}
+                  <div className="space-y-2">
                     <button
                       onClick={handleAddMultiple}
                       type="button"
-                      className="py-2.5 px-3 bg-rose-900 hover:bg-rose-950 text-white font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 text-xs cursor-pointer"
+                      className="w-full py-2.5 px-3 bg-rose-900 hover:bg-rose-950 text-white font-bold rounded-lg text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <ShoppingBag className="w-3.5 h-3.5" />
                       <span>Add to Bag</span>
@@ -188,10 +188,10 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
                     <button
                       onClick={handleDirectWhatsApp}
                       type="button"
-                      className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-1.5 text-xs cursor-pointer"
+                      className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
-                      <span>Order on WA</span>
+                      <span>Order via WhatsApp</span>
                     </button>
                   </div>
                 </>

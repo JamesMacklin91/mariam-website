@@ -6,7 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { useProducts } from '@/context/ProductContext';
 import { SITE_CONFIG } from '@/lib/config';
 import { formatImageUrl } from '@/lib/utils';
-import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
+import { X, ShoppingBag, Plus, Minus, Trash2, MessageCircle } from 'lucide-react';
 
 export default function CartDrawer({
   whatsappNumber = SITE_CONFIG.whatsappNumber,
@@ -38,21 +38,21 @@ export default function CartDrawer({
     };
   }, [isCartOpen]);
 
-  // Auto-sync stored quantities with live sheet stock whenever drawer is rendered or records change
+  // Auto-sync stored quantities with live sheet stock
   useEffect(() => {
     if (!cartRecords.length) return;
 
     cartRecords.forEach((record) => {
       const product = getProductById(record.id);
       if (!product || !product.inStock) {
-        clampRecordQuantity(record.id, 0); // Remove out-of-stock or deleted items
+        clampRecordQuantity(record.id, 0);
       } else {
         const maxStock =
           typeof product.stock === 'number' && product.stock > 0
             ? product.stock
             : 10;
         if (record.quantity > maxStock) {
-          clampRecordQuantity(record.id, maxStock); // Clamp stored state & update badge
+          clampRecordQuantity(record.id, maxStock);
         }
       }
     });
@@ -250,10 +250,10 @@ export default function CartDrawer({
                 <button
                   onClick={handleWhatsAppCheckout}
                   type="button"
-                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-xs transition-colors flex items-center justify-center gap-2 text-sm cursor-pointer"
+                  className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                 >
-                  <span>Send Order via WhatsApp</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span>Order via WhatsApp</span>
                 </button>
 
                 <button
