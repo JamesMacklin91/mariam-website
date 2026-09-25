@@ -1,5 +1,6 @@
 // src/app/layout.tsx
 import './globals.css';
+import { Metadata } from 'next';
 import { fetchProductsFromSheet } from '@/lib/sheets';
 import { ProductProvider } from '@/context/ProductContext';
 import { CartProvider } from '@/context/CartContext';
@@ -8,8 +9,52 @@ import CartTrigger from '@/components/CartTrigger';
 import Link from 'next/link';
 import { SITE_CONFIG } from '@/lib/config';
 
+// Open Graph & Meta Definition
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_CONFIG.url),
+  title: {
+    default: `${SITE_CONFIG.name} | Quality Perfumes & Wellness`,
+    template: `%s | ${SITE_CONFIG.name}`,
+  },
+  description: SITE_CONFIG.tagline,
+  keywords: [
+    'Mariam Market',
+    'Perfumes Tanzania',
+    'Dar es Salaam cosmetics',
+    'Lattafa perfumes',
+    'Wellness supplements Tanzania',
+    'Buy perfumes WhatsApp',
+  ],
+  authors: [{ name: SITE_CONFIG.name }],
+  openGraph: {
+    type: 'website',
+    locale: 'en_TZ',
+    url: SITE_CONFIG.url,
+    title: `${SITE_CONFIG.name} | Quality Perfumes & Wellness`,
+    description: SITE_CONFIG.tagline,
+    siteName: SITE_CONFIG.name,
+    images: [
+      {
+        url: SITE_CONFIG.ogImage,
+        width: 1200,
+        height: 630,
+        alt: `${SITE_CONFIG.name} Store Preview Banner`,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_CONFIG.name,
+    description: SITE_CONFIG.tagline,
+    images: [SITE_CONFIG.ogImage],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
+
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Fetch initial products on server render so the entire app knows about them
   const products = await fetchProductsFromSheet();
 
   return (
@@ -30,7 +75,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {children}
             </main>
 
-            {/* Render CartDrawer at the root layout so it opens on ANY page */}
             <CartDrawer />
           </CartProvider>
         </ProductProvider>
