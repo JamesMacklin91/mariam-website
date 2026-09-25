@@ -81,21 +81,21 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-100 text-slate-500 hover:text-slate-800 hover:bg-slate-200 transition-colors cursor-pointer"
+          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/80 backdrop-blur-xs text-slate-600 hover:text-slate-900 hover:bg-white transition-colors cursor-pointer shadow-xs"
           aria-label="Close modal"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="grid grid-cols-1 md:grid-cols-2">
-          {/* Image Panel */}
-          <div className="bg-slate-100 relative min-h-[260px] md:min-h-[380px] flex items-center justify-center p-6">
+          {/* Image Panel - Spans full height on desktop */}
+          <div className="bg-slate-100 relative min-h-[280px] md:min-h-[420px] w-full flex items-center justify-center overflow-hidden">
             {formattedImg ? (
               <img
                 src={formattedImg}
                 alt={product.name}
                 referrerPolicy="no-referrer"
-                className="w-full h-full object-contain max-h-[320px] rounded-lg"
+                className="w-full h-full object-cover object-center absolute inset-0"
               />
             ) : (
               <div className="flex flex-col items-center justify-center text-slate-400 gap-2">
@@ -104,22 +104,22 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
               </div>
             )}
 
-            {/* Category Badge (Matched to ProductCard) */}
+            {/* Category Badge */}
             {product.category && (
-              <span className="absolute top-2 left-2 bg-slate-900/75 text-white text-[10px] font-bold px-2 py-0.5 rounded backdrop-blur-xs">
+              <span className="absolute top-3 left-3 z-10 bg-slate-900/75 text-white text-[10px] font-bold px-2.5 py-1 rounded backdrop-blur-xs">
                 {product.category}
               </span>
             )}
 
             {/* Stock Badge */}
-            <div className="absolute bottom-4 left-4">
+            <div className="absolute bottom-3 left-3 z-10">
               {product.inStock ? (
-                <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200 shadow-2xs">
-                  <CheckCircle className="w-3.5 h-3.5" />
+                <span className="inline-flex items-center gap-1 bg-white/90 backdrop-blur-xs text-emerald-800 text-xs font-bold px-2.5 py-1 rounded-full border border-emerald-200 shadow-2xs">
+                  <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
                   In Stock ({maxStock})
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 text-xs font-bold px-2.5 py-1 rounded-full border border-rose-200 shadow-2xs">
+                <span className="inline-flex items-center gap-1 bg-white/90 backdrop-blur-xs text-rose-800 text-xs font-bold px-2.5 py-1 rounded-full border border-rose-200 shadow-2xs">
                   Out of Stock
                 </span>
               )}
@@ -127,7 +127,7 @@ export default function ProductModal({ product, whatsappNumber, onClose }: Produ
           </div>
 
           {/* Details & Actions */}
-          <div className="p-6 flex flex-col justify-between space-y-6">
+          <div className="p-6 flex flex-col justify-between space-y-6 bg-white">
             <div className="space-y-3">
               <h2 className="text-xl font-bold text-slate-900 leading-snug">
                 {product.name}

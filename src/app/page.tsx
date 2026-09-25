@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { fetchProductsFromSheet } from '@/lib/sheets';
 import ProductCarousel from '@/components/ProductCarousel';
 import { SITE_CONFIG } from '@/lib/config';
-import { ArrowRight, Sparkles, ShieldCheck, Truck, MessageSquare } from 'lucide-react';
+import { ArrowRight, Sparkles, ShieldCheck, Truck, MessageSquare, MessageCircle } from 'lucide-react';
 
 export default async function Home() {
   // Fetch live products from Google Sheets
@@ -48,23 +48,24 @@ export default async function Home() {
         </div>
 
         {/* Primary Call-to-Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 pt-1">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-1">
           <Link
             href="/products"
-            className="w-full sm:w-auto bg-rose-900 hover:bg-rose-950 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-rose-950/10 transition-all flex items-center justify-center gap-2 text-base"
+            className="w-full sm:w-auto bg-rose-900 hover:bg-rose-950 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-rose-950/10 transition-all flex items-center justify-center gap-2 text-base cursor-pointer"
           >
-            Browse All Products
+            <span>Browse All Products</span>
             <ArrowRight className="w-5 h-5" />
           </Link>
 
+          {/* Matched to WhatsApp Button Styling & MessageCircle icon */}
           <a
             href={SITE_CONFIG.socials.whatsappLink('Hujambo! I have an inquiry from the website.')}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full sm:w-auto bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold px-6 py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 text-base"
+            className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-emerald-700/10 transition-colors flex items-center justify-center gap-2 text-base cursor-pointer"
           >
-            <MessageSquare className="w-5 h-5 text-emerald-600" />
-            Chat on WhatsApp
+            <MessageCircle className="w-5 h-5" />
+            <span>Chat on WhatsApp</span>
           </a>
         </div>
 
